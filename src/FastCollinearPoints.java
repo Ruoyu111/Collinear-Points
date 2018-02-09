@@ -36,11 +36,9 @@ public class FastCollinearPoints {
         ArrayList<Point[]> res = new ArrayList<Point[]>();
 
         if (localPoints.length > 3) {
-            Point[] temp = localPoints.clone();
-            // loop through points in backup array, and sort the points array
-            for (Point p : localPoints) {
-                Arrays.sort(temp, p.slopeOrder());
-                findSegments(temp, p, res);
+            for (int i = 0; i < localPoints.length - 1; i++) {
+                Arrays.sort(localPoints, i + 1, localPoints.length, localPoints[i].slopeOrder());
+                findSegments(localPoints, i, res);
             }
         }
 
@@ -63,23 +61,23 @@ public class FastCollinearPoints {
     }
 
     // Helper Methods
-    private void findSegments(Point[] points, Point p, ArrayList<Point[]> res) {
-        // start from position 1, since position 0 will be the point p itself
-        int start = 1;
-        double slop = p.slopeTo(points[1]);
+    private void findSegments(Point[] points, int i, ArrayList<Point[]> res) {
+        Point p = points[i];
+        double slop = p.slopeTo(points[i + 1]);
+        int start = i + 1;
 
-        for (int i = 2; i < points.length; i++) {
-            double tempSlop = p.slopeTo(points[i]);
+        for (int index = i + 2; index < points.length; index++) {
+            double tempSlop = p.slopeTo(points[index]);
             if (!collinearSlop(tempSlop, slop)) {
                 // check to see whether there have already 3 equal points
-                if (i - start >= 3) {
-                    Point[] ls = genSegment(points, p, start, i);
+                if (index - start >= 3) {
+                    Point[] ls = genSegment(points, p, start, index);
                     if (isUnique(ls, res)) {
                         res.add(ls);
                     }
                 }
                 // update
-                start = i;
+                start = index;
                 slop = tempSlop;
             }
         }
@@ -117,8 +115,13 @@ public class FastCollinearPoints {
     }
 
     private boolean segEqual(Point[] seg, Point[] ls) {
-        if ((seg[0].compareTo(ls[0]) == 0 && seg[1].compareTo(ls[1]) == 0)
-                || (seg[0].compareTo(ls[1]) == 0 && seg[1].compareTo(ls[0]) == 0))
+        double slopSeg = seg[0].slopeTo(seg[1]);
+        double slopLs = ls[0].slopeTo(ls[1]);
+        if (Double.compare(slopSeg, slopLs) != 0)
+            return false;
+        if ((seg[0].compareTo(ls[0]) == 0) || (seg[1].compareTo(ls[1]) == 0))
+            return true;
+        if (Double.compare(slopSeg, seg[0].slopeTo(ls[0])) == 0)
             return true;
         return false;
     }
