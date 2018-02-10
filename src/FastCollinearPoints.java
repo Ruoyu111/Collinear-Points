@@ -33,7 +33,7 @@ public class FastCollinearPoints {
             }
         }
 
-        ArrayList<Point[]> res = new ArrayList<Point[]>();
+        ArrayList<LineSegment> res = new ArrayList<>();
 
         if (localPoints.length > 3) {
             Point[] temp = localPoints.clone();
@@ -44,12 +44,7 @@ public class FastCollinearPoints {
             }
         }
 
-        segments = new LineSegment[res.size()];
-        int pos = 0;
-        for (Point[] seg : res) {
-            segments[pos++] = new LineSegment(seg[0], seg[1]);
-        }
-
+        segments = res.toArray(new LineSegment[res.size()]);
     }
 
     // the number of line segments
@@ -63,30 +58,28 @@ public class FastCollinearPoints {
     }
 
     // Helper Methods
-    private void findSegments(Point[] points, Point p, ArrayList<Point[]> res) {
+    private void findSegments(Point[] points, Point p, ArrayList<LineSegment> res) {
         // start from position 1, since position 0 will be the point p itself
         int start = 1;
         double slop = p.slopeTo(points[1]);
 
         for (int i = 2; i < points.length; i++) {
             double tempSlop = p.slopeTo(points[i]);
-            if (!collinearSlop(tempSlop, slop)) {
+            if (!collinearSlop(tempSlop, slop) || i == points.length - 1) {
                 // check to see whether there have already 3 equal points
                 if (i - start >= 3) {
                     Point[] ls = genSegment(points, p, start, i);
-                    if (isUnique(ls, res)) {
-                        res.add(ls);
+                    /**
+                     * Important Point: only add line segment which starts form point p to avoid
+                     * duplicate
+                     */
+                    if (ls[0].compareTo(p) == 0) {
+                        res.add(new LineSegment(ls[0], ls[1]));
                     }
                 }
                 // update
                 start = i;
                 slop = tempSlop;
-            }
-        }
-        if (points.length - start >= 3) {
-            Point[] ls = genSegment(points, p, start, points.length);
-            if (isUnique(ls, res)) {
-                res.add(ls);
             }
         }
     }
@@ -105,22 +98,6 @@ public class FastCollinearPoints {
         }
         temp.sort(null);
         return new Point[] { temp.get(0), temp.get(temp.size() - 1) };
-    }
-
-    // check duplicate
-    private boolean isUnique(Point[] ls, ArrayList<Point[]> res) {
-        for (Point[] seg : res) {
-            if (segEqual(seg, ls))
-                return false;
-        }
-        return true;
-    }
-
-    private boolean segEqual(Point[] seg, Point[] ls) {
-        if ((seg[0].compareTo(ls[0]) == 0 && seg[1].compareTo(ls[1]) == 0)
-                || (seg[0].compareTo(ls[1]) == 0 && seg[1].compareTo(ls[0]) == 0))
-            return true;
-        return false;
     }
 
     public static void main(String[] args) {
