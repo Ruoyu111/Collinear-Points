@@ -37,7 +37,7 @@ public class FastCollinearPoints {
 
         if (localPoints.length > 3) {
             Point[] temp = localPoints.clone();
-            // loop through points in backup array, and sort the points array
+            // loop through points in backup array, and sort the temp points array
             for (Point p : localPoints) {
                 Arrays.sort(temp, p.slopeOrder());
                 findSegments(temp, p, res);
@@ -65,7 +65,7 @@ public class FastCollinearPoints {
 
         for (int i = 2; i < points.length; i++) {
             double tempSlop = p.slopeTo(points[i]);
-            if (!collinearSlop(tempSlop, slop) || i == points.length - 1) {
+            if (!collinearSlop(tempSlop, slop)) {
                 // check to see whether there have already 3 equal points
                 if (i - start >= 3) {
                     Point[] ls = genSegment(points, p, start, i);
@@ -80,6 +80,13 @@ public class FastCollinearPoints {
                 // update
                 start = i;
                 slop = tempSlop;
+            }
+        }
+        // situation when the last several points in the array are collinear
+        if (points.length - start >= 3) {
+            Point[] lastPoints = genSegment(points, p, start, points.length);
+            if (lastPoints[0].compareTo(p) == 0) {
+                res.add(new LineSegment(lastPoints[0], lastPoints[1]));
             }
         }
     }
